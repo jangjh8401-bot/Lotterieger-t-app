@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 이름 추첨기</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 30px 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+        }
+
+        /* 입력 영역 */
+        .input-section {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-row input {
+            flex: 1;
+            padding: 14px 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+            font-size: 1rem;
+            font-family: 'Noto Sans KR', sans-serif;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .input-row input::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .input-row input:focus {
+            border-color: #7c5cfc;
+            box-shadow: 0 0 20px rgba(124, 92, 252, 0.3);
+        }
+
+        .btn-add {
+            padding: 14px 24px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, #7c5cfc, #a855f7);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Noto Sans KR', sans-serif;
+            white-space: nowrap;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(124, 92, 252, 0.4);
+        }
+
+        .btn-add:active {
+            transform: translateY(0);
+        }
+
+        .bulk-toggle {
+            display: block;
+            margin-top: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-align: center;
+            transition: color 0.3s;
+        }
+
+        .bulk-toggle:hover {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .bulk-input {
+            display: none;
+            margin-top: 12px;
+        }
+
+        .bulk-input.show {
+            display: block;
+        }
+
+        .bulk-input textarea {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+            font-size: 0.95rem;
+            font-family: 'Noto Sans KR', sans-serif;
+            outline: none;
+            resize: vertical;
+            min-height: 100px;
+            transition: all 0.3s;
+        }
+
+        .bulk-input textarea::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .bulk-input textarea:focus {
+            border-color: #7c5cfc;
+            box-shadow: 0 0 20px rgba(124, 92, 252, 0.3);
+        }
+
+        .bulk-input .btn-add {
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        /* 명단 영역 */
+        .list-section {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .list-header h2 {
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .count-badge {
+            background: rgba(124, 92, 252, 0.3);
+            color: #c4b5fd;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .name-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 44px;
+        }
+
+        .name-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.95rem;
+            animation: fadeIn 0.3s ease;
+            transition: all 0.3s;
+        }
+
+        .name-tag:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .name-tag.highlight {
+            background: linear-gradient(135deg, #7c5cfc, #a855f7);
+            color: #fff;
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(124, 92, 252, 0.5);
+        }
+
+        .name-tag .remove-btn {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            line-height: 1;
+            transition: all 0.2s;
+        }
+
+        .name-tag .remove-btn:hover {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .empty-msg {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.9rem;
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+        }
+
+        .list-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
+
+        .btn-clear {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: 'Noto Sans KR', sans-serif;
+            transition: color 0.3s;
+        }
+
+        .btn-clear:hover {
+            color: #ef4444;
+        }
+
+        /* 추첨 버튼 */
+        .draw-section {
+            margin-bottom: 20px;
+        }
+
+        .draw-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .draw-options label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        .draw-options select {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            font-size: 0.9rem;
+            font-family: 'Noto Sans KR', sans-serif;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .draw-options select option {
+            background: #302b63;
+            color: #fff;
+        }
+
+        .btn-draw {
+            width: 100%;
+            padding: 20px;
+            border-radius: 16px;
+            border: none;
+            background: linear-gradient(135deg, #f59e0b, #ef4444, #ec4899);
+            background-size: 200% 200%;
+            color: #fff;
+            font-size: 1.4rem;
+            font-weight: 900;
+            cursor: pointer;
+            font-family: 'Noto Sans KR', sans-serif;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 2px;
+        }
+
+        .btn-draw:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-draw:active {
+            transform: translateY(0);
+        }
+
+        .btn-draw:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-draw.spinning {
+            animation: gradientShift 0.5s linear infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 결과 영역 */
+        .result-section {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .result-section.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result-label {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+
+        .result-name {
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #f59e0b, #ef4444, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            animation: resultPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .result-multi {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .result-multi .winner-tag {
+            font-size: 1.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #f59e0b, #ef4444, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: resultPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes resultPop {
+            0% { transform: scale(0.3); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 당첨 축하 효과 */
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            top: -10px;
+            animation: confettiFall linear forwards;
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* 히스토리 */
+        .history-section {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .history-section h2 {
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .history-round {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.85rem;
+            min-width: 60px;
+        }
+
+        .history-winner {
+            color: #fbbf24;
+            font-weight: 700;
+            font-size: 1rem;
+            flex: 1;
+            text-align: center;
+        }
+
+        .history-time {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.8rem;
+            min-width: 70px;
+            text-align: right;
+        }
+
+        .history-empty {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .btn-history-clear {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-family: 'Noto Sans KR', sans-serif;
+            float: right;
+            margin-top: -36px;
+        }
+
+        .btn-history-clear:hover {
+            color: #ef4444;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 룰렛 스피너 오버레이 */
+        .spinner-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner-overlay.show {
+            display: flex;
+        }
+
+        .spinner-text {
+            font-size: 4rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 40px rgba(124, 92, 252, 0.8);
+            animation: pulse 0.15s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        /* 반응형 */
+        @media (max-width: 480px) {
+            h1 { font-size: 1.8rem; }
+            .result-name { font-size: 2.2rem; }
+            .btn-draw { font-size: 1.2rem; padding: 16px; }
+            .spinner-text { font-size: 3rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 이름 추첨기</h1>
+        <p class="subtitle">이름을 추가하고 행운의 주인공을 뽑아보세요!</p>
+
+        <!-- 입력 영역 -->
+        <div class="input-section">
+            <div class="input-row">
+                <input type="text" id="nameInput" placeholder="이름을 입력하세요" autocomplete="off">
+                <button class="btn-add" onclick="addName()">추가</button>
+            </div>
+            <span class="bulk-toggle" onclick="toggleBulk()">📋 여러 명 한번에 추가하기</span>
+            <div class="bulk-input" id="bulkInput">
+                <textarea id="bulkText" placeholder="이름을 한 줄에 하나씩 입력하세요&#10;예:&#10;홍길동&#10;김철수&#10;이영희"></textarea>
+                <button class="btn-add" onclick="addBulkNames()">일괄 추가</button>
+            </div>
+        </div>
+
+        <!-- 명단 영역 -->
+        <div class="list-section">
+            <div class="list-header">
+                <h2>📋 참가자 명단</h2>
+                <span class="count-badge" id="countBadge">0명</span>
+            </div>
+            <div class="name-list" id="nameList">
+                <span class="empty-msg">아직 추가된 이름이 없습니다</span>
+            </div>
+            <div class="list-actions">
+                <button class="btn-clear" onclick="clearAll()">🗑️ 전체 삭제</button>
+            </div>
+        </div>
+
+        <!-- 추첨 옵션 & 버튼 -->
+        <div class="draw-section">
+            <div class="draw-options">
+                <label for="drawCount">추첨 인원:</label>
+                <select id="drawCount">
+                    <option value="1">1명</option>
+                    <option value="2">2명</option>
+                    <option value="3">3명</option>
+                    <option value="5">5명</option>
+                </select>
+            </div>
+            <button class="btn-draw" id="drawBtn" onclick="startDraw()" disabled>
+                🎲 추첨하기
+            </button>
+        </div>
+
+        <!-- 결과 영역 -->
+        <div class="result-section" id="resultSection">
+            <div class="result-label">🎉 당첨자 발표!</div>
+            <div id="resultDisplay"></div>
+        </div>
+
+        <!-- 히스토리 -->
+        <div class="history-section">
+            <h2>📜 추첨 기록</h2>
+            <button class="btn-history-clear" onclick="clearHistory()">기록 삭제</button>
+            <div class="history-list" id="historyList">
+                <span class="history-empty">아직 추첨 기록이 없습니다</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 스피너 오버레이 -->
+    <div class="spinner-overlay" id="spinnerOverlay">
+        <div class="spinner-text" id="spinnerText"></div>
+    </div>
+
+    <!-- 축하 효과 -->
+    <div class="confetti-container" id="confettiContainer"></div>
+
+    <script>
+        let names = [];
+        let history = [];
+        let round = 0;
+        let isSpinning = false;
+
+        const nameInput = document.getElementById('nameInput');
+        const nameList = document.getElementById('nameList');
+        const countBadge = document.getElementById('countBadge');
+        const drawBtn = document.getElementById('drawBtn');
+        const resultSection = document.getElementById('resultSection');
+        const resultDisplay = document.getElementById('resultDisplay');
+        const spinnerOverlay = document.getElementById('spinnerOverlay');
+        const spinnerText = document.getElementById('spinnerText');
+        const historyList = document.getElementById('historyList');
+        const confettiContainer = document.getElementById('confettiContainer');
+
+        // 로컬 스토리지에서 불러오기
+        function loadData() {
+            const saved = localStorage.getItem('lottery_names');
+            const savedHistory = localStorage.getItem('lottery_history');
+            const savedRound = localStorage.getItem('lottery_round');
+            if (saved) {
+                names = JSON.parse(saved);
+                renderNames();
+            }
+            if (savedHistory) {
+                history = JSON.parse(savedHistory);
+                renderHistory();
+            }
+            if (savedRound) {
+                round = parseInt(savedRound);
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('lottery_names', JSON.stringify(names));
+            localStorage.setItem('lottery_history', JSON.stringify(history));
+            localStorage.setItem('lottery_round', round.toString());
+        }
+
+        // Enter 키로 추가
+        nameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addName();
+        });
+
+        function addName() {
+            const name = nameInput.value.trim();
+            if (!name) return;
+            if (names.includes(name)) {
+                shakeInput();
+                return;
+            }
+            names.push(name);
+            nameInput.value = '';
+            nameInput.focus();
+            renderNames();
+            saveData();
+        }
+
+        function toggleBulk() {
+            document.getElementById('bulkInput').classList.toggle('show');
+        }
+
+        function addBulkNames() {
+            const text = document.getElementById('bulkText').value;
+            const newNames = text.split('\n')
+                .map(n => n.trim())
+                .filter(n => n && !names.includes(n));
+            
+            if (newNames.length === 0) return;
+
+            names.push(...newNames);
+            document.getElementById('bulkText').value = '';
+            document.getElementById('bulkInput').classList.remove('show');
+            renderNames();
+            saveData();
+        }
+
+        function removeName(index) {
+            names.splice(index, 1);
+            renderNames();
+            saveData();
+        }
+
+        function clearAll() {
+            if (names.length === 0) return;
+            if (!confirm('모든 이름을 삭제하시겠습니까?')) return;
+            names = [];
+            renderNames();
+            saveData();
+        }
+
+        function renderNames() {
+            if (names.length === 0) {
+                nameList.innerHTML = '<span class="empty-msg">아직 추가된 이름이 없습니다</span>';
+                drawBtn.disabled = true;
+            } else {
+                nameList.innerHTML = names.map((name, i) => `
+                    <span class="name-tag" id="tag-${i}">
+                        ${escapeHtml(name)}
+                        <button class="remove-btn" onclick="removeName(${i})">✕</button>
+                    </span>
+                `).join('');
+                drawBtn.disabled = false;
+            }
+            countBadge.textContent = `${names.length}명`;
+            updateDrawOptions();
+        }
+
+        function updateDrawOptions() {
+            const select = document.getElementById('drawCount');
+            const options = select.querySelectorAll('option');
+            options.forEach(opt => {
+                opt.disabled = parseInt(opt.value) > names.length;
+            });
+            if (parseInt(select.value) > names.length) {
+                select.value = '1';
+            }
+        }
+
+        function shakeInput() {
+            nameInput.style.animation = 'none';
+            nameInput.offsetHeight;
+            nameInput.style.animation = 'shake 0.4s ease';
+            nameInput.style.borderColor = '#ef4444';
+            setTimeout(() => {
+                nameInput.style.borderColor = '';
+                nameInput.style.animation = '';
+            }, 500);
+        }
+
+        // 추첨 시작
+        async function startDraw() {
+            if (isSpinning || names.length === 0) return;
+            isSpinning = true;
+
+            const count = parseInt(document.getElementById('drawCount').value);
+            if (count > names.length) {
+                alert('참가자 수보다 많은 인원을 뽑을 수 없습니다!');
+                isSpinning = false;
+                return;
+            }
+
+            drawBtn.disabled = true;
+            drawBtn.classList.add('spinning');
+            resultSection.classList.remove('show');
+
+            // 스피너 애니메이션
+            spinnerOverlay.classList.add('show');
+
+            const winners = [];
+            const available = [...names];
+
+            for (let w = 0; w < count; w++) {
+                const winnerIndex = Math.floor(Math.random() * available.length);
+                winners.push(available[winnerIndex]);
+                available.splice(winnerIndex, 1);
+            }
+
+            // 룰렛 효과 - 빠르게 이름을 돌림
+            const totalFrames = 30 + Math.floor(Math.random() * 15);
+            
+            for (let i = 0; i < totalFrames; i++) {
+                const randomName = names[Math.floor(Math.random() * names.length)];
+                spinnerText.textContent = randomName;
+                
+                // 점점 느려지는 효과
+                const delay = 50 + (i * i * 0.8);
+                await sleep(Math.min(delay, 400));
+            }
+
+            // 최종 당첨자 표시
+            spinnerText.textContent = winners.join(', ');
+            await sleep(800);
+
+            spinnerOverlay.classList.remove('show');
+
+            // 결과 표시
+            showResult(winners);
+            
+            // 태그 하이라이트
+            highlightWinners(winners);
+
+            // 히스토리 추가
+            round++;
+            history.unshift({
+                round: round,
+                winners: winners,
+                time: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+            });
+            renderHistory();
+            saveData();
+
+            // 축하 효과
+            launchConfetti();
+
+            drawBtn.disabled = false;
+            drawBtn.classList.remove('spinning');
+            isSpinning = false;
+        }
+
+        function showResult(winners) {
+            resultSection.classList.add('show');
+            if (winners.length === 1) {
+                resultDisplay.innerHTML = `<div class="result-name">${escapeHtml(winners[0])}</div>`;
+            } else {
+                resultDisplay.innerHTML = `<div class="result-multi">${
+                    winners.map(w => `<span class="winner-tag">${escapeHtml(w)}</span>`).join('')
+                }</div>`;
+            }
+        }
+
+        function highlightWinners(winners) {
+            document.querySelectorAll('.name-tag').forEach(tag => {
+                tag.classList.remove('highlight');
+            });
+            names.forEach((name, i) => {
+                if (winners.includes(name)) {
+                    const tag = document.getElementById(`tag-${i}`);
+                    if (tag) tag.classList.add('highlight');
+                }
+            });
+        }
+
+        function renderHistory() {
+            if (history.length === 0) {
+                historyList.innerHTML = '<span class="history-empty">아직 추첨 기록이 없습니다</span>';
+                return;
+            }
+            historyList.innerHTML = history.map(h => `
+                <div class="history-item">
+                    <span class="history-round">${h.round}회차</span>
+                    <span class="history-winner">${escapeHtml(h.winners.join(', '))}</span>
+                    <span class="history-time">${h.time}</span>
+                </div>
+            `).join('');
+        }
+
+        function clearHistory() {
+            if (history.length === 0) return;
+            if (!confirm('추첨 기록을 모두 삭제하시겠습니까?')) return;
+            history = [];
+            round = 0;
+            renderHistory();
+            saveData();
+        }
+
+        // 축하 효과
+        function launchConfetti() {
+            confettiContainer.innerHTML = '';
+            const colors = ['#f59e0b', '#ef4444', '#ec4899', '#7c5cfc', '#10b981', '#3b82f6', '#f97316'];
+            
+            for (let i = 0; i < 80; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.width = (Math.random() * 8 + 5) + 'px';
+                confetti.style.height = (Math.random() * 8 + 5) + 'px';
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                confetti.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+                confetti.style.animationDelay = (Math.random() * 0.5) + 's';
+                confettiContainer.appendChild(confetti);
+            }
+
+            setTimeout(() => {
+                confettiContainer.innerHTML = '';
+            }, 4000);
+        }
+
+        // 유틸
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 초기화
+        loadData();
+    </script>
+</body>
+</html>
+
